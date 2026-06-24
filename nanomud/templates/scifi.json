@@ -1,0 +1,107 @@
+{
+  "rooms": {
+    "quarters": {
+      "id": "quarters",
+      "name": "Crew Quarters",
+      "desc": "A sleek, metallic room with bunk pods and holographic terminals showing diagnostics. A doorway leads east into the bridge.",
+      "exits": {
+        "east": "bridge"
+      },
+      "items": [],
+      "npcs": [
+        {
+          "id": "replicator_01",
+          "name": "replicator",
+          "desc": "An automated supply terminal humming with energy.",
+          "behaviors": {
+            "talk": "Select item to synthesize. Credit payment required.",
+            "shop": {
+              "blaster": 60,
+              "energy_cell": 15
+            }
+          },
+          "properties": {},
+          "room_id": "quarters"
+        }
+      ],
+      "properties": {}
+    },
+    "bridge": {
+      "id": "bridge",
+      "name": "Spaceship Command Bridge",
+      "desc": "Panoramic viewport displaying stars and a nearby nebula. Control consoles flash with navigation data. The quarters are west, and a teleporter pad leads north to an alien jungle.",
+      "exits": {
+        "west": "quarters",
+        "north": "alien_jungle"
+      },
+      "items": [
+        {
+          "id": "energy_cell_01",
+          "name": "energy_cell",
+          "desc": "A heavy plasma battery glowing with blue light.",
+          "gettable": true,
+          "properties": {
+            "credits": 20
+          }
+        }
+      ],
+      "npcs": [
+        {
+          "id": "droid_01",
+          "name": "droid",
+          "desc": "A small maintenance droid rolling around fixing exposed wiring.",
+          "behaviors": {
+            "wander": true,
+            "talk": "Beep boop! Core systems functional."
+          },
+          "properties": {
+            "hp": 25,
+            "max_hp": 25,
+            "damage": 4,
+            "gold": 5
+          },
+          "room_id": "bridge"
+        }
+      ],
+      "properties": {}
+    },
+    "alien_jungle": {
+      "id": "alien_jungle",
+      "name": "Luminescent Alien Jungle",
+      "desc": "Glowing plants cast violet shadows across wet soil. Spores float gently through the humid air. The teleporter path lies to the south.",
+      "exits": {
+        "south": "bridge"
+      },
+      "items": [
+        {
+          "id": "blaster_01",
+          "name": "blaster",
+          "desc": "A sleek laser pistol. It hums with high-frequency power.",
+          "gettable": true,
+          "properties": {
+            "damage": 30
+          }
+        }
+      ],
+      "npcs": [
+        {
+          "id": "xenomorph_01",
+          "name": "xenomorph",
+          "desc": "A terrifying alien predator with acidic drool and a sharp tail, hiding in the foliage.",
+          "behaviors": {
+            "aggressive": true,
+            "talk": "HISSSSSSSS! The creature bares its rows of metallic teeth."
+          },
+          "properties": {
+            "hp": 120,
+            "max_hp": 120,
+            "damage": 18,
+            "gold": 50
+          },
+          "room_id": "alien_jungle"
+        }
+      ],
+      "properties": {}
+    }
+  }
+}

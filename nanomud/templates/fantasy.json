@@ -1,0 +1,108 @@
+{
+  "rooms": {
+    "tavern": {
+      "id": "tavern",
+      "name": "The Rusty Dagger Tavern",
+      "desc": "A lively tavern filled with the scent of roasted meat and spilt ale. A fire crackles cozy in the hearth. A path leads north into a dark forest.",
+      "exits": {
+        "north": "dark_forest"
+      },
+      "items": [],
+      "npcs": [
+        {
+          "id": "merchant_01",
+          "name": "merchant",
+          "desc": "A stout dwarf merchant sitting behind a counter filled with wares.",
+          "behaviors": {
+            "talk": "Hello, adventurer! I have potions and weapons for sale.",
+            "shop": {
+              "sword": 40,
+              "shield": 25,
+              "potion": 10
+            }
+          },
+          "properties": {},
+          "room_id": "tavern"
+        }
+      ],
+      "properties": {}
+    },
+    "dark_forest": {
+      "id": "dark_forest",
+      "name": "The Whispering Forest",
+      "desc": "Tall, gnarled trees block out most of the sky. The wind makes the branches whisper eerie warnings. The tavern path lies to the south, and a dark cave entrance is north.",
+      "exits": {
+        "south": "tavern",
+        "north": "goblin_cave"
+      },
+      "items": [
+        {
+          "id": "shield_01",
+          "name": "shield",
+          "desc": "An old wooden shield with iron reinforcements. It looks like it can absorb some damage.",
+          "gettable": true,
+          "properties": {
+            "armor": 5
+          }
+        }
+      ],
+      "npcs": [
+        {
+          "id": "goblin_01",
+          "name": "goblin",
+          "desc": "A small, green-skinned goblin clutching a dagger. He is muttering to himself.",
+          "behaviors": {
+            "wander": true,
+            "talk": "Give me gold, or feel my blade!"
+          },
+          "properties": {
+            "hp": 30,
+            "max_hp": 30,
+            "damage": 5,
+            "gold": 8
+          },
+          "room_id": "dark_forest"
+        }
+      ],
+      "properties": {}
+    },
+    "goblin_cave": {
+      "id": "goblin_cave",
+      "name": "The Goblin Cave",
+      "desc": "A damp, echoing cavern littered with bones. The air is cold and smells of sulphur. The exit to the forest is south.",
+      "exits": {
+        "south": "dark_forest"
+      },
+      "items": [
+        {
+          "id": "sword_01",
+          "name": "sword",
+          "desc": "A heavy iron broadsword with a leather-wrapped grip. It is sharp and ready for battle.",
+          "gettable": true,
+          "properties": {
+            "damage": 15
+          }
+        }
+      ],
+      "npcs": [
+        {
+          "id": "dragon_01",
+          "name": "dragon",
+          "desc": "A massive, scaled red dragon sleeping on a small pile of treasure. It opens one fiery eye as you enter.",
+          "behaviors": {
+            "aggressive": true,
+            "talk": "GRAAAAAWR! You dare disturb my slumber, mortal?!"
+          },
+          "properties": {
+            "hp": 150,
+            "max_hp": 150,
+            "damage": 15,
+            "gold": 100
+          },
+          "room_id": "goblin_cave"
+        }
+      ],
+      "properties": {}
+    }
+  }
+}

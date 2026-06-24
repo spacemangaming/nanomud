@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=61.0.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nanomud"
+version = "0.4.0"
+description = "A super simple, no-coding builder-focused MUD engine in Python."
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "MIT"}
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = []
+
+[project.scripts]
+nanomud = "nanomud.__main__:main"
+
+[tool.setuptools.package-data]
+nanomud = ["templates/*.json"]
+

@@ -1,0 +1,107 @@
+{
+  "rooms": {
+    "apartment": {
+      "id": "apartment",
+      "name": "Safehouse Apartment",
+      "desc": "A small, cluttered apartment with neon light bleeding through the window blinds. A scanner ticks on the desk. The exit to the street is east.",
+      "exits": {
+        "east": "city_street"
+      },
+      "items": [],
+      "npcs": [
+        {
+          "id": "clerk_01",
+          "name": "clerk",
+          "desc": "A sketchy guy in a trenchcoat leaning against a vending machine.",
+          "behaviors": {
+            "talk": "Need some hardware? Gold talks, buddy.",
+            "shop": {
+              "pistol": 50,
+              "keycard": 20
+            }
+          },
+          "properties": {},
+          "room_id": "apartment"
+        }
+      ],
+      "properties": {}
+    },
+    "city_street": {
+      "id": "city_street",
+      "name": "Downtown City Street",
+      "desc": "Slick pavement reflecting the neon signs. Rain falls softly in the alleyway. The apartment is west, and a grand bank entrance is north.",
+      "exits": {
+        "west": "apartment",
+        "north": "bank_vault"
+      },
+      "items": [
+        {
+          "id": "briefcase_01",
+          "name": "briefcase",
+          "desc": "A locked metal briefcase. It feels heavy and valuable.",
+          "gettable": true,
+          "properties": {
+            "gold": 25
+          }
+        }
+      ],
+      "npcs": [
+        {
+          "id": "guard_01",
+          "name": "guard",
+          "desc": "A private security guard holding a flashlight, scanning the area.",
+          "behaviors": {
+            "wander": true,
+            "talk": "Move along, citizen. Nothing to see here."
+          },
+          "properties": {
+            "hp": 40,
+            "max_hp": 40,
+            "damage": 8,
+            "gold": 15
+          },
+          "room_id": "city_street"
+        }
+      ],
+      "properties": {}
+    },
+    "bank_vault": {
+      "id": "bank_vault",
+      "name": "The High-Security Bank Vault",
+      "desc": "Thick steel walls and laser security grids protect safety deposit boxes. The exit back to the street is south.",
+      "exits": {
+        "south": "city_street"
+      },
+      "items": [
+        {
+          "id": "pistol_01",
+          "name": "pistol",
+          "desc": "A 9mm semi-automatic handgun. Reliable and deadly.",
+          "gettable": true,
+          "properties": {
+            "damage": 25
+          }
+        }
+      ],
+      "npcs": [
+        {
+          "id": "officer_01",
+          "name": "officer",
+          "desc": "An elite SWAT officer guarding the central vault deposit boxes.",
+          "behaviors": {
+            "aggressive": true,
+            "talk": "Freeze! You are trespassing under code red!"
+          },
+          "properties": {
+            "hp": 80,
+            "max_hp": 80,
+            "damage": 12,
+            "gold": 30
+          },
+          "room_id": "bank_vault"
+        }
+      ],
+      "properties": {}
+    }
+  }
+}
