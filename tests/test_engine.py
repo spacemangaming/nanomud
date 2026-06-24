@@ -156,5 +156,59 @@ class TestEngineAndWorld(unittest.TestCase):
         finally:
             shutil.rmtree(temp_dir_2)
 
+    def test_settings_loading_and_generation(self):
+        from nanomud.settings import load_settings
+        temp_dir = tempfile.mkdtemp()
+        try:
+            settings_path = os.path.join(temp_dir, "serversettings.py")
+            self.assertFalse(os.path.exists(settings_path))
+            
+            settings = load_settings(temp_dir)
+            self.assertTrue(os.path.exists(settings_path))
+            self.assertEqual(settings["PORT"], 4000)
+            self.assertEqual(settings["SERVER_NAME"], "Nanomud")
+            
+            with open(settings_path, "w") as f:
+                f.write("PORT = 5050\nSERVER_NAME = 'Custom Test Name'\n")
+                
+            new_settings = load_settings(temp_dir)
+            self.assertEqual(new_settings["PORT"], 5050)
+            self.assertEqual(new_settings["SERVER_NAME"], "Custom Test Name")
+        finally:
+            shutil.rmtree(temp_dir)
+
+    def test_custom_command_and_events(self):
+        cmd_run = False
+        def mock_cmd(player, args):
+            nonlocal cmd_run
+            cmd_run = True
+            self.assertEqual(args, "testarg")
+            player.send("custom cmd run")
+            
+        self.engine.register_command("customcmd", mock_cmd)
+        self.assertIn("customcmd", self.engine.custom_commands)
+        
+        class MockPlayer:
+            def __init__(self):
+                self.output = []
+            def send(self, text):
+                self.output.append(text)
+                
+        player = MockPlayer()
+        self.engine.custom_commands["customcmd"](player, "testarg")
+        self.assertTrue(cmd_run)
+        self.assertEqual(player.output[0], "custom cmd run")
+        
+        event_fired = False
+        @self.engine.on_event("test_event")
+        def handle_test_event(arg1, arg2):
+            nonlocal event_fired
+            event_fired = True
+            self.assertEqual(arg1, "val1")
+            self.assertEqual(arg2, "val2")
+            
+        self.engine.trigger_event("test_event", "val1", "val2")
+        self.assertTrue(event_fired)
+
 if __name__ == "__main__":
     unittest.main()

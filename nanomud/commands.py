@@ -131,6 +131,7 @@ def handle_go(engine, player, direction: str):
     
     # Save player's new location
     engine.world.save_player(player)
+    engine.trigger_event("player_move", player, room.id, target_room.id)
 
 def handle_say(engine, player, args: str):
     if not args:
@@ -139,6 +140,7 @@ def handle_say(engine, player, args: str):
     room = engine.world.rooms.get(player.room_id)
     if room:
         room.broadcast(f"{{b{player.name}{{x says, \"{args}\"")
+        engine.trigger_event("player_say", player, args)
 
 def handle_tell(engine, player, args: str):
     if not args:

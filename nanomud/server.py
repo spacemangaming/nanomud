@@ -113,10 +113,10 @@ class TelnetSession:
 
 
 class TelnetServer:
-    def __init__(self, host: str, port: int, data_dir: str, template: Optional[str] = None):
+    def __init__(self, host: str, port: int, data_dir: str, template: Optional[str] = None, settings: Optional[dict] = None):
         self.host = host
         self.port = port
-        self.engine = Engine(data_dir, template=template)
+        self.engine = Engine(data_dir, template=template, settings=settings)
         self.session_counter = 0
         self.server: Optional[asyncio.AbstractServer] = None
 
@@ -135,7 +135,8 @@ class TelnetServer:
         self.server = await asyncio.start_server(self.client_handler, self.host, self.port)
         addr = self.server.sockets[0].getsockname()
         logger.info(f"Server running on {addr}")
-        print(f"Nanomud running on telnet://{self.host}:{self.port}")
+        server_name = self.engine.settings.get("SERVER_NAME", "Nanomud")
+        print(f"{server_name} running on telnet://{self.host}:{self.port}")
         print(f"Database directory: {self.engine.world.data_dir}")
         print("Press Ctrl+C to stop.")
 

@@ -49,8 +49,8 @@ Builder (OLC) Commands (Admins only):
 
 def main():
     parser = argparse.ArgumentParser(description="Nanomud: A super simple no-coding builder MUD engine.")
-    parser.add_argument("--host", default="0.0.0.0", help="Host address to bind to (default: 0.0.0.0)")
-    parser.add_argument("--port", type=int, default=4000, help="Port to listen on (default: 4000)")
+    parser.add_argument("--host", default=None, help="Host address to bind to (overrides serversettings.py)")
+    parser.add_argument("--port", type=int, default=None, help="Port to listen on (overrides serversettings.py)")
     parser.add_argument("--data", default="./nanodata", help="Directory for world and player JSON files (default: ./nanodata)")
     parser.add_argument("--template", choices=["fantasy", "modern", "scifi"], default=None, help="Initialize the world with a theme template if no database exists")
     parser.add_argument("--guide", action="store_true", help="Print the in-game command reference guide and exit")
@@ -61,7 +61,16 @@ def main():
         print_guide()
         return
         
-    server = TelnetServer(host=args.host, port=args.port, data_dir=args.data, template=args.template)
+    # Load server settings (creates default if not found)
+    from .settings import load_settings
+    settings = load_settings(args.data)
+    
+    # Resolve parameters: CLI overrides serversettings.py, which overrides hardcoded defaults
+    host = args.host if args.host is not None else settings.get("HOST", "0.0.0.0")
+    port = args.port if args.port is not None else settings.get("PORT", 4000)
+    template = args.template if args.template is not None else settings.get("TEMPLATE", None)
+    
+    server = TelnetServer(host=host, port=port, data_dir=args.data, template=template, settings=settings)
     server.run()
 
 if __name__ == "__main__":

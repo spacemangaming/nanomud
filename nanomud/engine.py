@@ -1,6 +1,7 @@
 import asyncio
 import hashlib
 import random
+import os
 import logging
 from typing import Dict, List, Tuple, Any, Optional
 from .models import Player, Item, NPC
@@ -8,15 +9,25 @@ from .world import World
 from .commands import GAME_COMMANDS, DIRECTIONS, handle_go, get_player_damage
 from .builder_cmds import BUILDER_COMMANDS
 from .colors import ansi_format
+from .plugins import load_plugins
 
 logger = logging.getLogger(__name__)
 
 class Engine:
-    def __init__(self, data_dir: str, start_loops: bool = True, template: Optional[str] = None):
+    def __init__(self, data_dir: str, start_loops: bool = True, template: Optional[str] = None, settings: Optional[Dict[str, Any]] = None):
+        self.settings = settings or {}
         self.world = World(data_dir, template)
         self.players: Dict[Any, Player] = {}  # session -> Player
         self.session_states: Dict[Any, Dict[str, Any]] = {}  # session -> state dict
         self.respawn_queue: List[Tuple[float, NPC, str]] = []  # (respawn_time, NPC_instance, room_id)
+        
+        # Plugin registries
+        self.custom_commands: Dict[str, Any] = {}
+        self.event_handlers: Dict[str, List[Any]] = {}
+        
+        # Load plugins
+        plugins_dir = os.path.join(data_dir, "plugins")
+        load_plugins(self, plugins_dir)
         
         self.start_loops = start_loops
         self.combat_task = None
@@ -48,16 +59,47 @@ class Engine:
         for player in list(self.players.values()):
             self.world.save_player(player)
 
+    def register_command(self, name: str, handler: Any):
+        self.custom_commands[name.lower().strip()] = handler
+
+    def command(self, name: str):
+        def decorator(func):
+            self.register_command(name, func)
+            return func
+        return decorator
+
+    def on_event(self, event_name: str):
+        def decorator(func):
+            if event_name not in self.event_handlers:
+                self.event_handlers[event_name] = []
+            self.event_handlers[event_name].append(func)
+            return func
+        return decorator
+
+    def trigger_event(self, event_name: str, *args, **kwargs):
+        handlers = self.event_handlers.get(event_name, [])
+        for handler in handlers:
+            try:
+                if asyncio.iscoroutinefunction(handler):
+                    self.loop.create_task(handler(*args, **kwargs))
+                else:
+                    handler(*args, **kwargs)
+            except Exception as e:
+                logger.error(f"Error in event handler '{handler.__name__}' for '{event_name}': {e}", exc_info=True)
+
     def hash_password(self, name: str, password: str) -> str:
         return hashlib.sha256(f"{name.lower()}:{password}".encode()).hexdigest()
 
     def handle_connect(self, session):
         self.session_states[session] = {"state": "ASK_NAME"}
-        session.send("{WWelcome to Nanomud!{x\nEnter your character name: ")
+        server_name = self.settings.get("SERVER_NAME", "Nanomud")
+        session.send(f"{{WWelcome to {server_name}!{{x\nEnter your character name: ")
+        self.trigger_event("player_connect", session)
 
     def handle_disconnect(self, session):
         player = self.players.get(session)
         if player:
+            self.trigger_event("player_disconnect", player)
             # Leave current room
             room = self.world.rooms.get(player.room_id)
             if room:
@@ -142,7 +184,7 @@ class Engine:
             player = Player(name=name, password_hash=pwd_hash)
             if is_first_player:
                 player.properties["admin"] = True
-                player.send("{yYou are the first player! You have been granted builder admin status.{@\n")
+                player.send("{yYou are the first player! You have been granted builder admin status.{x\n")
             
             self.world.save_player(player)
             self.login_player(session, player)
@@ -175,6 +217,7 @@ class Engine:
         from .commands import handle_look
         handle_look(self, player, "")
         logger.info(f"Player {player.name} logged in.")
+        self.trigger_event("player_login", player)
 
     def process_command(self, player: Player, line: str):
         if not line:
@@ -184,6 +227,15 @@ class Engine:
         cmd = parts[0].lower()
         args = parts[1] if len(parts) > 1 else ""
         
+        # Check custom plugin-registered commands first
+        if cmd in self.custom_commands:
+            try:
+                self.custom_commands[cmd](player, args)
+            except Exception as e:
+                player.send(f"{{rError executing command '{cmd}': {e}{{x")
+                logger.error(f"Error in custom command '{cmd}': {e}", exc_info=True)
+            return
+
         # Handle directions directly
         if cmd in DIRECTIONS:
             handle_go(self, player, cmd)
@@ -256,6 +308,7 @@ class Engine:
                 continue
                 
             # 1. Player attacks NPC
+            self.trigger_event("combat_round", player, npc)
             player_dmg = get_player_damage(player)
             npc_hp = npc.properties.get("hp", 0)
             npc_max_hp = npc.properties.get("max_hp", 20)
@@ -277,6 +330,9 @@ class Engine:
                     player.properties["gold"] = player.properties.get("gold", 0) + gold_reward
                     player.send(f"You receive {gold_reward} gold!")
                     
+                # Trigger event before removing NPC
+                self.trigger_event("npc_death", player, npc)
+                
                 # Stop combat
                 player.combat_target = None
                 
@@ -306,6 +362,8 @@ class Engine:
                 # Player Dies!
                 player.send("{rYou have been slain!{x")
                 room.broadcast(f"{{b{player.name}{{x has been slain by {{r{npc.name}{{x!", exclude=player)
+                
+                self.trigger_event("player_death", player, npc)
                 
                 # Reset player and teleport to lobby
                 player.properties["hp"] = player_max_hp

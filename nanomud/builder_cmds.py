@@ -486,6 +486,7 @@ def handle_teleport(engine, player, args: str):
     target_room.broadcast(f"{{b{player.name}{{x appears in a puff of builder smoke.", exclude=player)
     
     engine.world.save_player(player)
+    engine.trigger_event("player_move", player, current_room.id if current_room else None, target_room.id)
     
     # Auto-look
     from .commands import handle_look
