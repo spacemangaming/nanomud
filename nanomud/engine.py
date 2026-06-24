@@ -58,6 +58,7 @@ class Engine:
                 self.respawn_task.cancel()
         for player in list(self.players.values()):
             self.world.save_player(player)
+        self.world.close()
 
     def register_command(self, name: str, handler: Any):
         self.custom_commands[name.lower().strip()] = handler

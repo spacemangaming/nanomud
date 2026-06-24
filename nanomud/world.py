@@ -1,5 +1,6 @@
 import os
 import json
+import sqlite3
 import logging
 from typing import Dict, List, Optional
 from .models import Room, Player
@@ -9,29 +10,50 @@ logger = logging.getLogger(__name__)
 class World:
     def __init__(self, data_dir: str, template: Optional[str] = None):
         self.data_dir = data_dir
-        self.world_file = os.path.join(data_dir, "world.json")
+        self.db_path = os.path.join(data_dir, "world.db")
         self.players_dir = os.path.join(data_dir, "players")
         self.rooms: Dict[str, Room] = {}
         
         self.ensure_dirs()
+        self.conn = sqlite3.connect(self.db_path)
+        self.conn.row_factory = sqlite3.Row
+        self.create_tables()
         self.load_world(template)
         
     def ensure_dirs(self):
         os.makedirs(self.data_dir, exist_ok=True)
         os.makedirs(self.players_dir, exist_ok=True)
         
+    def create_tables(self):
+        try:
+            cursor = self.conn.cursor()
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS rooms (
+                    id TEXT PRIMARY KEY,
+                    data TEXT
+                )
+            """)
+            self.conn.commit()
+        except Exception as e:
+            logger.error(f"Error creating SQLite tables: {e}")
+            
     def load_world(self, template: Optional[str] = None):
-        if os.path.exists(self.world_file):
-            try:
-                with open(self.world_file, "r") as f:
-                    data = json.load(f)
-                for room_id, room_data in data.get("rooms", {}).items():
+        try:
+            cursor = self.conn.cursor()
+            cursor.execute("SELECT COUNT(*) FROM rooms")
+            count = cursor.fetchone()[0]
+            if count > 0:
+                cursor.execute("SELECT id, data FROM rooms")
+                rows = cursor.fetchall()
+                for row in rows:
+                    room_id = row["id"]
+                    room_data = json.loads(row["data"])
                     self.rooms[room_id] = Room.from_dict(room_data)
-                logger.info(f"Loaded {len(self.rooms)} rooms from {self.world_file}")
-            except Exception as e:
-                logger.error(f"Error loading world: {e}")
+                logger.info(f"Loaded {len(self.rooms)} rooms from SQLite database at {self.db_path}")
+            else:
                 self.create_default_world(template)
-        else:
+        except Exception as e:
+            logger.error(f"Error loading world: {e}")
             self.create_default_world(template)
             
     def create_default_world(self, template: Optional[str] = None):
@@ -61,18 +83,21 @@ class World:
         self.save()
         
     def save(self):
-        temp_file = self.world_file + ".tmp"
         try:
-            data = {
-                "rooms": {room_id: room.to_dict() for room_id, room in self.rooms.items()}
-            }
-            with open(temp_file, "w") as f:
-                json.dump(data, f, indent=2)
-            os.replace(temp_file, self.world_file)
+            cursor = self.conn.cursor()
+            for room_id, room in self.rooms.items():
+                cursor.execute(
+                    "INSERT OR REPLACE INTO rooms (id, data) VALUES (?, ?)",
+                    (room.id, json.dumps(room.to_dict()))
+                )
+            self.conn.commit()
+            logger.info("Saved world to SQLite database successfully.")
         except Exception as e:
-            logger.error(f"Error saving world: {e}")
-            if os.path.exists(temp_file):
-                os.remove(temp_file)
+            logger.error(f"Error saving world to SQLite DB: {e}")
+            try:
+                self.conn.rollback()
+            except Exception:
+                pass
                 
     def player_exists(self, name: str) -> bool:
         filename = os.path.join(self.players_dir, f"{name.lower()}.json")
@@ -111,3 +136,10 @@ class World:
         except Exception:
             pass
         return names
+
+    def close(self):
+        try:
+            self.conn.close()
+            logger.info("Closed SQLite database connection.")
+        except Exception as e:
+            logger.error(f"Error closing SQLite database: {e}")

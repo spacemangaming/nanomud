@@ -140,6 +140,7 @@ class TestEngineAndWorld(unittest.TestCase):
     def test_template_loading(self):
         # Create a new engine with fantasy template
         temp_dir_2 = tempfile.mkdtemp()
+        engine_fantasy = None
         try:
             engine_fantasy = Engine(temp_dir_2, start_loops=False, template="fantasy")
             # Should have loaded rooms: tavern, dark_forest, goblin_cave
@@ -154,6 +155,8 @@ class TestEngineAndWorld(unittest.TestCase):
             self.assertEqual(len(tavern.npcs), 1)
             self.assertEqual(tavern.npcs[0].name, "merchant")
         finally:
+            if engine_fantasy:
+                engine_fantasy.shutdown()
             shutil.rmtree(temp_dir_2)
 
     def test_settings_loading_and_generation(self):

@@ -2,13 +2,13 @@
 
 Nanomud is a super simple, **no-coding**, builder-focused MUD (Multi-User Dungeon) engine written in Python. 
 
-Unlike other MUD engines that require you to write Python scripts to expand the world or add objects, Nanomud lets you do **everything entirely in-game through commands** (Online Creation / OLC). The world, items, players, and NPCs are persisted automatically as human-readable JSON files.
+Unlike other MUD engines that require you to write Python scripts to expand the world or add objects, Nanomud lets you do **everything entirely in-game through commands** (Online Creation / OLC). The world is persisted in a SQLite database, and player accounts are saved automatically as human-readable JSON files.
 
 ## Features
 
 - **No Code Required**: Start a server and construct your entire game world, items, npcs, behaviors, and stats interactively while connected.
 - **Modern CLI & Packaging**: Install via `pip` and run immediately.
-- **Auto-Persistence**: Any modification you make (digging a room, changing descriptions, spawning items, editing stats) is autosaved in real-time to `./nanodata/world.json`.
+- **Auto-Persistence**: Any modification you make (digging a room, changing descriptions, spawning items, editing stats) is autosaved in real-time to `./nanodata/world.db`.
 - **Property-Based RPG Engine**: Built-in combat, movement, vendor shops, and NPC behaviors (wandering, conversation, aggression) driven by simple object properties (e.g. `hp`, `damage`, `gold`) editable via builder commands.
 - **Standard Telnet Protocol**: Connect with any client (standard telnet, PuTTY, Mudlet, etc.).
 - **Zero Dependencies**: Built entirely using the Python standard library (`asyncio`).
@@ -142,9 +142,9 @@ This configures the merchant to sell a `potion` for 10 gold and a `shield` for 5
 
 ---
 
-## JSON Persistence Files
+## Database & Persistence Files
 
-Nanomud stores your world in a clean, human-readable format. This makes it trivial to version control your world map using git, or manually edit stats in an editor.
+Nanomud stores your world in a SQLite database and player accounts in clean, human-readable JSON files.
 
-- **World Map**: Saved in `nanodata/world.json`.
+- **World Map**: Saved in `nanodata/world.db`.
 - **Player Accounts**: Saved in `nanodata/players/<username>.json`.
